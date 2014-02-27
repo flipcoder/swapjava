@@ -61,8 +61,8 @@ def menu(title, msg, options, back=False, back_text="Back", index=True, current=
 
 def main():
     current_jvm_guess = ""
-
-    JVM_DIR = "/usr/lib/jvm/"
+    
+    JVM_DIRS = ["/usr/lib/jvm/", "/opt/"]
     BIN_DIR = "/usr/bin"
 
     # add more here as you need (this is safer than scanning the bin directory)
@@ -80,17 +80,21 @@ def main():
     if os.path.islink(os.path.join(BIN_DIR, "java")):
         END_DIR = "/bin/java"
         current_jvm_guess = os.readlink(os.path.join(BIN_DIR, "java"))
-        if current_jvm_guess.startswith(JVM_DIR) and current_jvm_guess.endswith(END_DIR):
-            current_jvm_guess = current_jvm_guess[len(JVM_DIR):-len(END_DIR)] # chop off start
+        for JVM_DIR in JVM_DIRS:
+            if current_jvm_guess.startswith(JVM_DIR) and current_jvm_guess.endswith(END_DIR):
+                current_jvm_guess = current_jvm_guess[len(JVM_DIR):-len(END_DIR)] # chop off start
 
     # scan for java installations in JVM_DIR (set above)
-    for f in os.listdir(JVM_DIR):
-        full = os.path.join(JVM_DIR, f)
-        if os.path.isdir(full):
-            jvm_installs[f] = full
+    for JVM_DIR in JVM_DIRS:
+        for f in os.listdir(JVM_DIR):
+            if "java" not in f:
+                continue
+            full = os.path.join(JVM_DIR, f)
+            if os.path.isdir(full):
+                jvm_installs[f] = full
 
     if not jvm_installs:
-        print "No Java installations in %s" % JVM_DIR
+        print "No Java installations in %s" % " ,".join(JVM_DIRS)
         return 1
 
     # menu
@@ -116,13 +120,13 @@ def main():
         link_path = os.path.join(BIN_DIR,util)
         util_path = os.path.join(java_bin_path, util)
         print "Installing %s..." % util
-        if os.path.isfile(link_path) and confirm("Replace %s" % util):
-            os.unlink(link_path)
+        if os.path.isfile(link_path) or os.path.islink(link_path):
+            if confirm("Replace %s" % util):
+                os.unlink(link_path)
         try:
             sh.ln('-s', os.path.join(java_bin_path, util), util) # cd needed for this line
         except sh.ErrorReturnCode_1:
-            print "You need root permissions (didn't use sudo?)."
-            return 1
+            print "Linking failed.  Ignoring... (remember to use sudo)"
         print "%s installed." % util
 
 
