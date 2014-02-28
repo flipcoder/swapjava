@@ -128,7 +128,8 @@ def main():
         except sh.ErrorReturnCode_1:
             print "Linking failed.  Ignoring... (remember to use sudo)"
         print "%s installed." % util
-
+    
+    print "Don't forget to set $JAVA_HOME"
 
 if __name__=="__main__":
     sys.exit(main())
