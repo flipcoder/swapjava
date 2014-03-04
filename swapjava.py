@@ -87,8 +87,9 @@ def main():
     # scan for java installations in JVM_DIR (set above)
     for JVM_DIR in JVM_DIRS:
         for f in os.listdir(JVM_DIR):
-            if "java" not in f:
-                continue
+            if "jvm" not in os.path.join(JVM_DIR, f):
+                if "java" not in os.path.join(JVM_DIR, f):
+                    continue
             full = os.path.join(JVM_DIR, f)
             if os.path.isdir(full):
                 jvm_installs[f] = full
